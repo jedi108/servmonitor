@@ -8,7 +8,7 @@ import (
 	"github.com/jedi108/servmonitor/storage"
 )
 
-func main() {
+func runService() {
 	stor, err := storage.NewStorage(storage.GetFileNameFromDate())
 	if err != nil {
 		panic(err)
@@ -23,4 +23,9 @@ func main() {
 		// fmt.Println(hs.CPUUsedPercent, hs.MemUsedPercent)
 		time.Sleep(2 * time.Second)
 	}
+}
+func main() {
+	// runService()
+	year, month, day := time.Now().AddDate(0, 0, -1).Date()
+	fmt.Printf("%v%02d%02d.csv\n", year, month, day)
 }

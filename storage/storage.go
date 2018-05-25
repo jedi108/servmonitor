@@ -19,17 +19,29 @@ import (
 	"time"
 )
 
+const (
+	templateFile = "%v%02d%02d.csv"
+)
+
+func IsFileExists(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func GetFileNameFromDate() string {
+	year, month, day := time.Now().Date()
+	return fmt.Sprintf(templateFile, year, month, day)
+}
+
 type Storage struct {
 	fileName    string
 	startDay    int
 	fappend     *os.File
 	IsDebugEcho bool
+	csvWriter   *csv.Writer
 	// fremove     *os.File
-}
-
-func GetFileNameFromDate() string {
-	year, month, day := time.Now().Date()
-	return fmt.Sprintf("%v%02d%02d.csv", year, month, day)
 }
 
 func NewStorage(fileName string) (*Storage, error) {
@@ -48,24 +60,31 @@ func NewStorage(fileName string) (*Storage, error) {
 	return storage, err
 }
 
-// TODO: remove previous day file from disk
 func (s *Storage) InsertData(datas []string) error {
 	_, _, day := time.Now().Date()
 	if s.startDay != day {
 		s.fappend.Close()
+
+		year, month, day := time.Now().AddDate(0, 0, -2).Date()
+		removeFileName := fmt.Sprintf(templateFile, year, month, day)
+		if IsFileExists(removeFileName) {
+			os.Remove(removeFileName)
+		}
+
 		ss, err := NewStorage(GetFileNameFromDate())
 		if err != nil {
 			return err
 		}
 		s = ss
+		defer ss.Close()
 	}
 
-	writer := csv.NewWriter(s.fappend)
-	defer writer.Flush()
+	s.csvWriter = csv.NewWriter(s.fappend)
+	defer s.csvWriter.Flush()
 
 	// []string
 	//
-	err := writer.Write(datas)
+	err := s.csvWriter.Write(datas)
 	if err != nil {
 		return err
 	}

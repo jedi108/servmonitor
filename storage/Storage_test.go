@@ -1,9 +1,13 @@
 package storage
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestInsert(t *testing.T) {
-	stor, err := NewStorage("test_file.csv")
+	fileTest := "test_file.csv"
+	stor, err := NewStorage(fileTest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,6 +26,17 @@ func TestInsert(t *testing.T) {
 	}
 
 	stor.Close()
+	stor.fappend.Close()
+	stor.csvWriter.Flush()
+	err = os.Remove(fileTest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.Remove(GetFileNameFromDate())
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 // TEST WITH POPLINE
